@@ -15,21 +15,33 @@ class QuizController extends Controller
         return view('kuis.index');
     }
 
-    // Ambil soal kuis dari RestCountries API
+    // Ambil soal kuis dari RestCountries API v5
     public function getQuestions()
     {
         try {
-            $response = Http::timeout(10)
-                ->get('https://restcountries.com/v3.1/all', [
-                    'fields' => 'name,flags,cca3',
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . config('services.restcountries.key'),
+                ])
+                ->get('https://api.restcountries.com/countries/v5', [
+                    'limit' => 100,
+                    'response_fields' => 'names.common,flag.url_png,codes.alpha_2',
                 ]);
 
             if (!$response->successful()) {
-                return response()->json(['error' => 'Gagal mengambil data dari API.'], 500);
+                return response()->json(['error' => 'Gagal mengambil data dari API. Status: ' . $response->status()], 500);
             }
 
-            $countries = collect($response->json())
-                ->filter(fn($c) => !empty($c['flags']['png']) && !empty($c['name']['common']))
+            $body = $response->json();
+            $objects = collect($body['data']['objects'] ?? []);
+
+            // Filter negara yang punya nama & bendera valid
+            $countries = $objects
+                ->filter(fn($c) => !empty($c['flag']['url_png']) && !empty($c['names']['common']))
+                ->map(fn($c) => [
+                    'name' => $c['names']['common'],
+                    'flag' => $c['flag']['url_png'],
+                ])
                 ->values();
 
             if ($countries->count() < 4) {
@@ -38,17 +50,17 @@ class QuizController extends Controller
 
             $questions = $countries->shuffle()->take(self::QUIZ_COUNT)->map(function ($correct) use ($countries) {
                 $wrong = $countries
-                    ->where('name.common', '!=', $correct['name']['common'])
+                    ->where('name', '!=', $correct['name'])
                     ->shuffle()
                     ->take(3)
-                    ->pluck('name.common')
+                    ->pluck('name')
                     ->toArray();
 
-                $options = collect(array_merge($wrong, [$correct['name']['common']]))->shuffle()->values()->toArray();
+                $options = collect(array_merge($wrong, [$correct['name']]))->shuffle()->values()->toArray();
 
                 return [
-                    'flag'    => $correct['flags']['png'],
-                    'answer'  => $correct['name']['common'],
+                    'flag'    => $correct['flag'],
+                    'answer'  => $correct['name'],
                     'options' => $options,
                 ];
             });
@@ -88,7 +100,6 @@ class QuizController extends Controller
         ]);
     }
 
-    // Hapus hasil kuis (admin / pemilik)
     public function destroy($id)
     {
         $result = QuizResult::findOrFail($id);

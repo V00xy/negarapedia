@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('favorites', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->string('country_code', 3);
             $table->string('country_name');
             $table->string('flag_url');
@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('currency')->nullable();
             $table->timestamps();
 
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unique(['user_id', 'country_code']);
         });
     }
