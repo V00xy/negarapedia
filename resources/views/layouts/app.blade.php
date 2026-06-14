@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
         .navbar-brand { font-weight: 700; font-size: 1.4rem; }
         .navbar { background: #1a3c6e !important; }
         .navbar a, .navbar .navbar-brand { color: #fff !important; }
@@ -25,7 +25,12 @@
         .badge-rank-2 { background: #C0C0C0; color: #333; }
         .badge-rank-3 { background: #CD7F32; color: #fff; }
         .alert { border-radius: 8px; }
-        @media(max-width:768px){ .sidebar { min-height: auto; } }
+        @media(max-width:991px){
+            .sidebar { min-height: auto; }
+            .navbar-collapse .nav-link { color: rgba(255,255,255,0.9) !important; padding: .6rem 1rem; }
+            .navbar-collapse .nav-link.active { background: rgba(255,255,255,0.15); border-radius: 6px; }
+            .navbar-collapse hr { border-color: rgba(255,255,255,.2); margin: 6px 0; }
+        }
     </style>
     @stack('styles')
 </head>
@@ -38,6 +43,37 @@
             <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
+
+            <ul class="navbar-nav d-lg-none mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('negara.index') ? 'active' : '' }}" href="{{ route('negara.index') }}">
+                        <i class="bi bi-search"></i> Cari Negara
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('negara.favorites') ? 'active' : '' }}" href="{{ route('negara.favorites') }}">
+                        <i class="bi bi-heart"></i> Favorit Saya
+                    </a>
+                </li>
+                <hr>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('kuis.*') ? 'active' : '' }}" href="{{ route('kuis.index') }}">
+                        <i class="bi bi-patch-question"></i> Kuis Bendera
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('leaderboard.*') ? 'active' : '' }}" href="{{ route('leaderboard.index') }}">
+                        <i class="bi bi-trophy"></i> Leaderboard
+                    </a>
+                </li>
+                <hr>
+            </ul>
+
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item">
                     <span class="nav-link text-warning">
@@ -62,7 +98,7 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-lg-2 col-md-3 sidebar d-none d-md-block p-0">
+        <div class="col-lg-2 col-md-3 sidebar d-none d-lg-block p-0">
             <ul class="nav flex-column pt-2">
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
@@ -85,7 +121,7 @@
             </ul>
         </div>
 
-        <div class="col-lg-10 col-md-9 p-4">
+        <div class="col-lg-10 col-md-12 p-4">
             @foreach(['success','error','info','warning'] as $type)
                 @if(session($type))
                     <div class="alert alert-{{ $type === 'error' ? 'danger' : $type }} alert-dismissible fade show">
