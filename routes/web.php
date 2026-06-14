@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\QuizController;
+use App\Http\Controllers\LeaderboardController;
 
 Route::get('/', fn() => redirect()->route('login'));
 
@@ -17,4 +19,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Kuis Tebak Bendera (Mhs 1)
+    Route::get('/kuis',           [QuizController::class, 'index'])->name('kuis.index');
+    Route::get('/kuis/questions', [QuizController::class, 'getQuestions'])->name('kuis.questions');
+    Route::post('/kuis/result',   [QuizController::class, 'saveResult'])->name('kuis.result');
+    Route::delete('/kuis/{id}',   [QuizController::class, 'destroy'])->name('kuis.destroy');
+
+    // Leaderboard (Mhs 1)
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 });

@@ -77,10 +77,10 @@
                 </li>
                 <hr style="border-color:rgba(255,255,255,.2); margin:6px 12px;">
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="bi bi-patch-question"></i> Kuis Bendera</a>
+                    <a class="nav-link {{ request()->routeIs('kuis.*') ? 'active' : '' }}" href="{{ route('kuis.index') }}"><i class="bi bi-patch-question"></i> Kuis Bendera</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="bi bi-trophy"></i> Leaderboard</a>
+                    <a class="nav-link {{ request()->routeIs('leaderboard.*') ? 'active' : '' }}" href="{{ route('leaderboard.index') }}"><i class="bi bi-trophy"></i> Leaderboard</a>
                 </li>
             </ul>
         </div>
