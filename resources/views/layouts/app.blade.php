@@ -70,10 +70,10 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="bi bi-search"></i> Cari Negara</a>
+                    <a class="nav-link {{ request()->routeIs('negara.index') ? 'active' : '' }}" href="{{ route('negara.index') }}"><i class="bi bi-search"></i> Cari Negara</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="bi bi-heart"></i> Favorit Saya</a>
+                    <a class="nav-link {{ request()->routeIs('negara.favorites') ? 'active' : '' }}" href="{{ route('negara.favorites') }}"><i class="bi bi-heart"></i> Favorit Saya</a>
                 </li>
                 <hr style="border-color:rgba(255,255,255,.2); margin:6px 12px;">
                 <li class="nav-item">
