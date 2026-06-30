@@ -6,82 +6,92 @@
     #quizBox { display: none; }
     #resultBox { display: none; }
     .option-btn {
-        width: 100%; padding: 12px; margin: 6px 0;
-        border: 2px solid #dee2e6; border-radius: 8px;
-        background: #fff; font-size: 1rem; cursor: pointer;
+        width: 100%; padding: 12px 16px; margin: 6px 0;
+        border: 2px solid #E2E8F0; border-radius: 10px;
+        background: #fff; font-size: .95rem; cursor: pointer;
         transition: all .2s; text-align: left;
+        font-weight: 500;
     }
-    .option-btn:hover { border-color: #1a3c6e; background: #f0f4ff; }
-    .option-btn.correct { border-color: #198754; background: #d1e7dd; color: #0a3622; }
-    .option-btn.wrong   { border-color: #dc3545; background: #f8d7da; color: #58151c; }
-    .option-btn:disabled { cursor: not-allowed; }
-    .flag-quiz { max-height: 200px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
-    #progressBar { height: 10px; border-radius: 5px; transition: width .4s; }
+    .option-btn:hover { border-color: var(--primary); background: #F8FAFC; transform: translateX(3px); }
+    .option-btn.correct { border-color: #059669; background: #D1FAE5; color: #065F46; }
+    .option-btn.wrong   { border-color: #DC2626; background: #FEE2E2; color: #991B1B; }
+    .option-btn:disabled { cursor: not-allowed; transform: none !important; }
+    .flag-quiz { max-height: 200px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.12); }
+    #progressBar { height: 8px; border-radius: 4px; transition: width .5s; }
     #timerBar { height: 6px; border-radius: 3px; transition: width 1s linear; }
     .score-circle {
         width: 120px; height: 120px; border-radius: 50%;
-        background: #1a3c6e; color: #fff;
-        display: flex; flex-direction: column;
+        background: linear-gradient(135deg, #0F2B4B, #1A3F6A);
+        color: #fff; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; margin: 0 auto;
+        box-shadow: 0 4px 20px rgba(15,43,75,.2);
+    }
+    #startBox .start-icon {
+        width: 80px; height: 80px; margin: 0 auto 16px;
+        background: linear-gradient(135deg, #EDE9FE, #C4B5FD);
+        border-radius: 20px; display: flex;
         align-items: center; justify-content: center;
-        margin: 0 auto;
+        font-size: 2.5rem;
     }
 </style>
 @endpush
 
 @section('content')
-<h4 class="fw-bold mb-1">🏳️ Kuis Tebak Bendera</h4>
-<p class="text-muted mb-3">Tebak nama negara dari benderanya! 10 soal, tiap soal 15 detik. Data diambil dari RestCountries API.</p>
+<h4 class="fw-bold mb-1" style="color:var(--primary);">🏳️ Kuis Tebak Bendera</h4>
+<p class="text-muted mb-3">Tebak nama negara dari benderanya! 10 soal, tiap soal 15 detik.</p>
 
 <div id="startBox" class="card text-center py-5">
-    <div style="font-size:5rem">🌍</div>
-    <h4 class="mt-3 fw-bold">Siap Mulai Kuis?</h4>
+    <div class="start-icon">🌍</div>
+    <h4 class="fw-bold" style="color:var(--primary);">Siap Mulai Kuis?</h4>
     <p class="text-muted">10 soal · 15 detik per soal · Skor maks 100</p>
-    <button class="btn btn-primary btn-lg mx-auto px-5" onclick="startQuiz()" id="btnStart">
+    <button class="btn btn-primary btn-lg mx-auto px-5" onclick="startQuiz()" id="btnStart" style="width:fit-content;">
         <i class="bi bi-play-fill"></i> Mulai Kuis
     </button>
 </div>
 
 <div id="quizBox">
     <div class="card mb-3 p-3">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="fw-semibold">Soal <span id="qNum">1</span> / <span id="qTotal">10</span></span>
-            <span class="badge bg-primary" id="scoreDisplay">Skor: 0</span>
-            <span class="fw-semibold text-danger" id="timerText">⏱ 15</span>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold" style="color:var(--primary);">
+                <i class="bi bi-question-circle"></i> Soal <span id="qNum">1</span> / <span id="qTotal">10</span>
+            </span>
+            <span class="badge" style="background:var(--primary);font-size:.85rem;" id="scoreDisplay">Skor: 0</span>
+            <span class="fw-bold" style="color:#DC2626;" id="timerText">⏱ 15</span>
         </div>
         <div class="bg-light rounded overflow-hidden mb-1">
             <div id="progressBar" class="bg-primary" style="width:0%"></div>
         </div>
         <div class="bg-light rounded overflow-hidden">
-            <div id="timerBar" class="bg-danger" style="width:100%"></div>
+            <div id="timerBar" style="width:100%;background:linear-gradient(90deg,#DC2626,#EF4444);"></div>
         </div>
     </div>
 
     <div class="card p-4 text-center">
         <p class="text-muted mb-3">Negara manakah yang memiliki bendera ini?</p>
         <img id="flagImg" src="" alt="Bendera" class="flag-quiz mb-4 mx-auto d-block">
-        <div id="optionsBox"></div>
+        <div id="optionsBox" class="text-start"></div>
         <div id="feedbackBox" class="mt-3 d-none">
-            <div id="feedbackText" class="fw-semibold fs-5"></div>
+            <div id="feedbackText" class="fw-bold fs-5"></div>
             <div id="correctAnswer" class="text-muted small"></div>
         </div>
     </div>
 </div>
 
 <div id="resultBox" class="card text-center py-5 px-4">
-    <h4 class="fw-bold mb-4">🎉 Kuis Selesai!</h4>
+    <h4 class="fw-bold mb-3" style="color:var(--primary);">🎉 Kuis Selesai!</h4>
     <div class="score-circle mb-3">
         <div class="fs-2 fw-bold" id="finalScore">0</div>
-        <div class="small">/ 100</div>
+        <div class="small" style="opacity:.8;">/ 100</div>
     </div>
-    <div class="mt-3 mb-1" id="resultMsg"></div>
+    <div class="mt-3 mb-1 fs-5" id="resultMsg"></div>
     <div class="text-muted small mb-4" id="resultDetail"></div>
 
-    <div class="d-flex gap-3 justify-content-center">
-        <button class="btn btn-primary" onclick="startQuiz()">
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <button class="btn btn-primary px-4" onclick="startQuiz()">
             <i class="bi bi-arrow-repeat"></i> Main Lagi
         </button>
-        <a href="{{ route('leaderboard.index') }}" class="btn btn-outline-warning">
-            <i class="bi bi-trophy"></i> Lihat Leaderboard
+        <a href="{{ route('leaderboard.index') }}" class="btn btn-warning px-4">
+            <i class="bi bi-trophy"></i> Leaderboard
         </a>
     </div>
 </div>
@@ -208,8 +218,13 @@ function showFeedback(correct, answer) {
     const text = document.getElementById('feedbackText');
     const ans  = document.getElementById('correctAnswer');
     box.classList.remove('d-none');
-    text.textContent = correct ? '✅ Betul!' : '❌ Salah!';
-    text.style.color = correct ? '#198754' : '#dc3545';
+    if (correct) {
+        text.innerHTML = '✅ Betul!';
+        text.style.color = '#059669';
+    } else {
+        text.innerHTML = '❌ Salah!';
+        text.style.color = '#DC2626';
+    }
     ans.textContent  = correct ? '' : 'Jawaban: ' + answer;
 }
 
@@ -230,7 +245,7 @@ async function showResult() {
 
     const pct = Math.round((correctCount / questions.length) * 100);
     let msg = pct >= 80 ? '🏆 Luar biasa!' : pct >= 60 ? '👍 Bagus!' : pct >= 40 ? '😊 Lumayan!' : '💪 Terus berlatih!';
-    document.getElementById('resultMsg').innerHTML = `<span class="fs-5">${msg}</span>`;
+    document.getElementById('resultMsg').textContent = msg;
 
     try {
         await fetch('{{ route("kuis.result") }}', {
