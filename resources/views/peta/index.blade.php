@@ -71,30 +71,60 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <script>
-function fixAntimeridian(geojson) {
-    function walk(coords) {
-        for (let i = 0; i < coords.length; i++) {
-            if (typeof coords[i][0] === 'number') continue;
-            walk(coords[i]);
-        }
-        if (coords.length > 0 && typeof coords[0][0] === 'number') {
-            let prev = coords[0][0];
-            for (let j = 1; j < coords.length; j++) {
-                let lng = coords[j][0];
-                if (lng - prev > 180) coords[j][0] = lng - 360;
-                else if (prev - lng > 180) coords[j][0] = lng + 360;
-                prev = coords[j][0];
+function splitAntimeridian(geojson) {
+    function splitRing(ring) {
+        var rings = [];
+        var current = [];
+        var n = ring.length;
+
+        for (var i = 0; i < n; i++) {
+            var p = ring[i];
+            var next = ring[(i + 1) % n];
+
+            current.push(p);
+
+            if (Math.abs(next[0] - p[0]) > 180) {
+                var meridian = next[0] > p[0] ? 180 : -180;
+                var t = (meridian - p[0]) / (next[0] - p[0]);
+                var lat = p[1] + (next[1] - p[1]) * t;
+                current.push([meridian, lat]);
+                rings.push(current);
+                current = [[-meridian, lat]];
             }
         }
+
+        if (current.length > 0) rings.push(current);
+        return rings;
     }
-    geojson.features.forEach(f => {
-        if (f.geometry) walk(f.geometry.coordinates);
+
+    function process(coords) {
+        if (typeof coords[0] === 'number') return [coords];
+        if (typeof coords[0][0] === 'number') return splitRing(coords);
+        var result = [];
+        for (var i = 0; i < coords.length; i++) {
+            var r = process(coords[i]);
+            for (var j = 0; j < r.length; j++) result.push(r[j]);
+        }
+        return result;
+    }
+
+    geojson.features.forEach(function(f) {
+        if (!f.geometry) return;
+        var old = f.geometry.coordinates;
+        var split = process(old);
+        if (split.length > 1) {
+            f.geometry.type = 'MultiPolygon';
+            f.geometry.coordinates = split.map(function(r) { return [r]; });
+        } else {
+            f.geometry.coordinates = split;
+        }
     });
+
     return geojson;
 }
 
-let geoLayer = null;
-let countryNames = [];
+var geoLayer = null;
+var countryNames = [];
 
 function initMap() {
     var map = L.map('worldMap', {
@@ -143,7 +173,7 @@ async function loadMapData(map) {
         var topology = await topoRes.json();
         var countries = topojson.feature(topology, topology.objects.countries);
 
-        fixAntimeridian(countries);
+        splitAntimeridian(countries);
 
         countryNames = countries.features.map(function(f) { return f.properties.name || ''; }).filter(Boolean);
 
@@ -184,7 +214,14 @@ async function loadMapData(map) {
 }
 
 function showCountryPopup(name, layer, map) {
-    map.fitBounds(layer.getBounds(), { padding: [30, 30], maxZoom: 5 });
+    var bounds = layer.getBounds();
+    var sw = bounds.getSouthWest();
+    var ne = bounds.getNorthEast();
+    var clamped = L.latLngBounds(
+        L.latLng(Math.max(-90, sw.lat), Math.max(-180, sw.lng)),
+        L.latLng(Math.min(90, ne.lat), Math.min(180, ne.lng))
+    );
+    map.fitBounds(clamped, { padding: [30, 30], maxZoom: 5 });
 
     var content =
         '<div class="country-popup">' +
