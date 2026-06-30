@@ -16,7 +16,6 @@
     .leaflet-popup-content-wrapper { border-radius: 10px !important; background: #fff !important; }
     .leaflet-popup-content { margin: 14px 16px !important; min-width: 180px; }
     .leaflet-popup-tip { background: #fff !important; }
-    .leaflet-tooltip { background: #fff !important; color: #0F2B4B !important; border: 1px solid #E2E8F0 !important; box-shadow: 0 2px 8px rgba(0,0,0,.1) !important; }
     .search-map-box {
         position: absolute; top: 20px; right: 20px; z-index: 1000;
         width: 320px; background: #fff; border-radius: 10px;
@@ -74,6 +73,67 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <script>
+function splitAntimeridian(geojson) {
+    function splitRing(ring) {
+        var n = ring.length;
+        var result = [];
+        var current = [];
+
+        for (var i = 0; i < n; i++) {
+            var a = ring[i];
+            var b = ring[(i + 1) % n];
+
+            current.push([a[0], a[1]]);
+
+            if (Math.abs(b[0] - a[0]) > 180) {
+                var lambda = b[0] > a[0] ? 180 : -180;
+                var t = (lambda - a[0]) / (b[0] - a[0]);
+                var phi = a[1] + t * (b[1] - a[1]);
+                current.push([lambda, phi]);
+                result.push(current);
+                current = [[-lambda, phi]];
+            }
+        }
+
+        if (current.length > 0) result.push(current);
+
+        if (result.length === 1) return [ring];
+        return result;
+    }
+
+    geojson.features.forEach(function(f) {
+        if (!f.geometry) return;
+
+        if (f.geometry.type === 'Polygon') {
+            var rings = f.geometry.coordinates;
+            var allRings = [];
+            rings.forEach(function(ring) {
+                splitRing(ring).forEach(function(p) { allRings.push(p); });
+            });
+            if (allRings.length > rings.length) {
+                f.geometry.type = 'MultiPolygon';
+                f.geometry.coordinates = allRings.map(function(r) { return [r]; });
+            }
+        } else if (f.geometry.type === 'MultiPolygon') {
+            var newPolys = [];
+            f.geometry.coordinates.forEach(function(polyRings) {
+                var allRings = [];
+                polyRings.forEach(function(ring) {
+                    splitRing(ring).forEach(function(p) { allRings.push(p); });
+                });
+                if (allRings.length > polyRings.length) {
+                    allRings.forEach(function(r) { newPolys.push([r]); });
+                } else {
+                    newPolys.push(allRings);
+                }
+            });
+            f.geometry.coordinates = newPolys;
+        }
+    });
+
+    return geojson;
+}
+
 var geoLayer = null;
 var countryNames = [];
 
@@ -124,12 +184,17 @@ async function loadMapData(map) {
         var topology = await topoRes.json();
         var countries = topojson.feature(topology, topology.objects.countries);
 
+        splitAntimeridian(countries);
+
         countryNames = countries.features.map(function(f) { return f.properties.name || ''; }).filter(Boolean);
 
         geoLayer = L.geoJSON(countries, {
             style: {
                 fillColor: '#CBD5E1',
-                weight: .6, opacity: 1, color: '#fff', fillOpacity: .85,
+                weight: .6,
+                opacity: 1,
+                color: '#fff',
+                fillOpacity: .85,
             },
             onEachFeature: function(feature, layer) {
                 var name = feature.properties.name || 'Unknown';
@@ -179,7 +244,7 @@ function showCountryPopup(name, layer, map) {
         '<a href="{{ route('negara.index') }}?q=' + encodeURIComponent(name) +
         '" class="btn btn-sm btn-primary" target="_blank">' +
         '<i class="bi bi-search"></i> Cari</a></div>';
-    L.popup({ closeButton: false, className: '' })
+    L.popup({ closeButton: false })
         .setLatLng(layer.getBounds().getCenter())
         .setContent(content)
         .openOn(map);
