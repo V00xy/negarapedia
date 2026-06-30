@@ -7,7 +7,6 @@ use App\Http\Controllers\QuizController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\NegaraController;
 use App\Http\Controllers\AIChatController;
-use App\Http\Controllers\MapController;
 
 Route::get('/', fn() => redirect()->route('login'));
 
@@ -35,9 +34,6 @@ Route::middleware('auth')->group(function () {
     // AI Chat Negara
     Route::get('/ai-chat',  [AIChatController::class, 'index'])->name('ai-chat.index');
     Route::post('/ai-chat', [AIChatController::class, 'chat'])->name('ai-chat.chat');
-
-    // Peta Interaktif
-    Route::get('/peta', [MapController::class, 'index'])->name('peta.index');
 
     // Pencarian & Favorit Negara (Mhs 2)
     Route::get('/negara',                     [NegaraController::class, 'index'])->name('negara.index');

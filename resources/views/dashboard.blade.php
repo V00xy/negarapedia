@@ -119,17 +119,6 @@
         </a>
     </div>
     <div class="col-md-3 col-6">
-        <a href="{{ route('peta.index') }}" class="text-decoration-none">
-            <div class="stat-card p-3 h-100">
-                <div class="icon" style="background:linear-gradient(135deg,#D1FAE5,#6EE7B7);">
-                    <i class="bi bi-map" style="font-size:1.3rem;color:#059669;"></i>
-                </div>
-                <div class="fw-semibold" style="color:var(--primary);">Peta Dunia</div>
-                <div class="text-muted small">Jelajahi peta interaktif</div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 col-6">
         <a href="{{ route('kuis.index') }}" class="text-decoration-none">
             <div class="stat-card p-3 h-100">
                 <div class="icon" style="background:linear-gradient(135deg,#FEE2E2,#FCA5A5);">
