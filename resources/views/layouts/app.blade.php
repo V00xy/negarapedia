@@ -263,11 +263,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('peta.index') ? 'active' : '' }}" href="{{ route('peta.index') }}">
-                        <i class="bi bi-map"></i> Peta Interaktif
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('negara.favorites') ? 'active' : '' }}" href="{{ route('negara.favorites') }}">
                         <i class="bi bi-heart"></i> Favorit Saya
                     </a>
