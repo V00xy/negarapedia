@@ -16,15 +16,31 @@ class QuizController extends Controller
     }
 
     // Ambil soal kuis dari RestCountries API v5
-    public function getQuestions()
+    public function getQuestions(Request $request)
     {
+        $level = $request->query('level', 'easy');
+        $customCount = min((int) $request->query('count', 10), 30);
+        $customTimer = min((int) $request->query('timer', 15), 30);
+        $customOptions = min((int) $request->query('options', 4), 8);
+
+        $levels = [
+            'easy'   => ['count' => 10, 'timer' => 20, 'options' => 4, 'max_score' => 100, 'multiplier' => 1],
+            'hard'   => ['count' => 20, 'timer' => 10, 'options' => 6, 'max_score' => 200, 'multiplier' => 1.5],
+            'custom' => ['count' => $customCount, 'timer' => $customTimer, 'options' => max(4, $customOptions), 'max_score' => $customCount * 10, 'multiplier' => 1],
+        ];
+
+        $config = $levels[$level] ?? $levels['easy'];
+        $quizCount = $config['count'];
+        $optionCount = $config['options'];
+        $maxScore = $config['max_score'];
+
         try {
             $response = Http::timeout(15)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . config('services.restcountries.key'),
                 ])
                 ->get('https://api.restcountries.com/countries/v5', [
-                    'limit' => 100,
+                    'limit' => 150,
                     'response_fields' => 'names.common,flag.url_png,codes.alpha_2',
                 ]);
 
@@ -35,7 +51,6 @@ class QuizController extends Controller
             $body = $response->json();
             $objects = collect($body['data']['objects'] ?? []);
 
-            // Filter negara yang punya nama & bendera valid
             $countries = $objects
                 ->filter(fn($c) => !empty($c['flag']['url_png']) && !empty($c['names']['common']))
                 ->map(fn($c) => [
@@ -44,15 +59,15 @@ class QuizController extends Controller
                 ])
                 ->values();
 
-            if ($countries->count() < 4) {
+            if ($countries->count() < $optionCount) {
                 return response()->json(['error' => 'Data negara tidak cukup.'], 500);
             }
 
-            $questions = $countries->shuffle()->take(self::QUIZ_COUNT)->map(function ($correct) use ($countries) {
+            $questions = $countries->shuffle()->take($quizCount)->map(function ($correct) use ($countries, $optionCount) {
                 $wrong = $countries
                     ->where('name', '!=', $correct['name'])
                     ->shuffle()
-                    ->take(3)
+                    ->take($optionCount - 1)
                     ->pluck('name')
                     ->toArray();
 
@@ -66,8 +81,11 @@ class QuizController extends Controller
             });
 
             return response()->json([
-                'questions' => $questions->values(),
-                'total'     => self::QUIZ_COUNT,
+                'questions'   => $questions->values(),
+                'total'       => $quizCount,
+                'timer'       => $config['timer'],
+                'max_score'   => $maxScore,
+                'level'       => $level,
             ]);
 
         } catch (\Exception $e) {
