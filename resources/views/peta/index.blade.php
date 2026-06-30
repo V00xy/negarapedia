@@ -11,9 +11,12 @@
         background: #F8FAFC; z-index: 1000; border-radius: var(--radius);
         flex-direction: column; gap: 12px;
     }
-    .country-popup h6 { margin: 0 0 4px; font-weight: 700; color: #0F2B4B; }
-    .leaflet-popup-content-wrapper { border-radius: 10px !important; }
-    .leaflet-popup-content { margin: 12px 14px !important; min-width: 180px; }
+    .country-popup { text-align: center; }
+    .country-popup h6 { margin: 0 0 8px; font-weight: 700; color: #0F2B4B; }
+    .leaflet-popup-content-wrapper { border-radius: 10px !important; background: #fff !important; }
+    .leaflet-popup-content { margin: 14px 16px !important; min-width: 180px; }
+    .leaflet-popup-tip { background: #fff !important; }
+    .leaflet-tooltip { background: #fff !important; color: #0F2B4B !important; border: 1px solid #E2E8F0 !important; box-shadow: 0 2px 8px rgba(0,0,0,.1) !important; }
     .search-map-box {
         position: absolute; top: 20px; right: 20px; z-index: 1000;
         width: 320px; background: #fff; border-radius: 10px;
@@ -71,58 +74,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <script>
-function splitAntimeridian(geojson) {
-    function splitRing(ring) {
-        var rings = [];
-        var current = [];
-        var n = ring.length;
-
-        for (var i = 0; i < n; i++) {
-            var p = ring[i];
-            var next = ring[(i + 1) % n];
-
-            current.push(p);
-
-            if (Math.abs(next[0] - p[0]) > 180) {
-                var meridian = next[0] > p[0] ? 180 : -180;
-                var t = (meridian - p[0]) / (next[0] - p[0]);
-                var lat = p[1] + (next[1] - p[1]) * t;
-                current.push([meridian, lat]);
-                rings.push(current);
-                current = [[-meridian, lat]];
-            }
-        }
-
-        if (current.length > 0) rings.push(current);
-        return rings;
-    }
-
-    function process(coords) {
-        if (typeof coords[0] === 'number') return [coords];
-        if (typeof coords[0][0] === 'number') return splitRing(coords);
-        var result = [];
-        for (var i = 0; i < coords.length; i++) {
-            var r = process(coords[i]);
-            for (var j = 0; j < r.length; j++) result.push(r[j]);
-        }
-        return result;
-    }
-
-    geojson.features.forEach(function(f) {
-        if (!f.geometry) return;
-        var old = f.geometry.coordinates;
-        var split = process(old);
-        if (split.length > 1) {
-            f.geometry.type = 'MultiPolygon';
-            f.geometry.coordinates = split.map(function(r) { return [r]; });
-        } else {
-            f.geometry.coordinates = split;
-        }
-    });
-
-    return geojson;
-}
-
 var geoLayer = null;
 var countryNames = [];
 
@@ -173,8 +124,6 @@ async function loadMapData(map) {
         var topology = await topoRes.json();
         var countries = topojson.feature(topology, topology.objects.countries);
 
-        splitAntimeridian(countries);
-
         countryNames = countries.features.map(function(f) { return f.properties.name || ''; }).filter(Boolean);
 
         geoLayer = L.geoJSON(countries, {
@@ -223,13 +172,17 @@ function showCountryPopup(name, layer, map) {
     );
     map.fitBounds(clamped, { padding: [30, 30], maxZoom: 5 });
 
+    map.closePopup();
     var content =
         '<div class="country-popup">' +
         '<h6>🌍 ' + name + '</h6>' +
         '<a href="{{ route('negara.index') }}?q=' + encodeURIComponent(name) +
-        '" class="btn btn-sm btn-primary mt-2 w-100" target="_blank">' +
-        '<i class="bi bi-search"></i> Cari di NegaraPedia</a></div>';
-    layer.bindPopup(content).openPopup();
+        '" class="btn btn-sm btn-primary" target="_blank">' +
+        '<i class="bi bi-search"></i> Cari</a></div>';
+    L.popup({ closeButton: false, className: '' })
+        .setLatLng(layer.getBounds().getCenter())
+        .setContent(content)
+        .openOn(map);
 }
 
 function setupSearch() {
