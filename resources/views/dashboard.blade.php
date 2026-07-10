@@ -8,7 +8,7 @@
             👋 Halo, {{ $user->name }}!
         </h3>
         <p class="text-muted mb-0" style="font-size:.95rem;">
-            Selamat datang di <strong>NegaraPedia</strong> — belajar IPS jadi lebih seru.
+            Selamat datang di <strong>NegaraPedia20</strong> — belajar IPS jadi lebih seru.
         </p>
     </div>
 </div>
